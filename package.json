@@ -1,0 +1,49 @@
+{
+    "name": "wiet-backend",
+    "version": "1.0.0",
+    "description": "A Backend server providing RESTful API for managing data within BiteShare react app",
+    "main": "server.js",
+    "type": "module",
+    "scripts": {
+        "start": "node src/server.js",
+        "dev": "nodemon src/server.js",
+        "seq-mig": "npx sequelize-cli db:migrate",
+        "seq-undo": "npx sequelize-cli db:migrate:undo",
+        "seq-undo-name": "npx sequelize-cli db:migrate:undo --name",
+        "seq-undo-all": "npx sequelize-cli db:migrate:undo:all",
+        "seq-mig-gen": "npx sequelize-cli migration:generate --name",
+        "reset-db": "npx sequelize-cli db:migrate:undo:all && npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/sahilshivekar/wiet-backend.git"
+    },
+    "author": "Sahil Shivekar",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/sahilshivekar/wiet-backend/issues"
+    },
+    "homepage": "https://github.com/sahilshivekar/wiet-backend#readme",
+    "devDependencies": {
+        "nodemon": "^3.1.9",
+        "sequelize-cli": "^6.6.2"
+    },
+    "dependencies": {
+        "bcrypt": "^5.1.1",
+        "cloudinary": "^2.6.0",
+        "cookie-parser": "^1.4.7",
+        "cors": "^2.8.5",
+        "crypto": "^1.0.1",
+        "dotenv": "^16.4.7",
+        "express": "^4.21.2",
+        "fs": "^0.0.1-security",
+        "joi": "^17.13.3",
+        "jsonwebtoken": "^9.0.2",
+        "libphonenumber-js": "^1.12.5",
+        "moment": "^2.30.1",
+        "multer": "^1.4.5-lts.1",
+        "nodemailer": "^6.10.0",
+        "pg": "^8.14.0",
+        "sequelize": "^6.37.6"
+    }
+}
