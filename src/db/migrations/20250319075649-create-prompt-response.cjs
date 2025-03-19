@@ -24,22 +24,22 @@ module.exports = {
                 allowNull: false,
             },
             prompt_text: {
-                type: Sequelize.STRING,
+                type: Sequelize.TEXT,
             },
             prompt_file_secure_url: {
-                type: Sequelize.STRING,
+                type: Sequelize.TEXT,
             },
             prompt_file_public_id: {
-                type: Sequelize.STRING,
+                type: Sequelize.TEXT,
             },
             response_text: {
-                type: Sequelize.STRING,
+                type: Sequelize.TEXT,
             },
             response_file_secure_url: {
-                type: Sequelize.STRING,
+                type: Sequelize.TEXT,
             },
             response_file_public_id: {
-                type: Sequelize.STRING,
+                type: Sequelize.TEXT,
             },
             ai_model_id: {
                 type: Sequelize.INTEGER,

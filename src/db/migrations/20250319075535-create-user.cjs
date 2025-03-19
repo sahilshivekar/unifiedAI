@@ -9,12 +9,12 @@ module.exports = {
                 primaryKey: true,
                 autoIncrement: true,
             },
-            // username: {
-            //     type: Sequelize.STRING,
-            //     allowNull: false,
-            //     unique: true,
-            // },
-            email: {
+            user_username: {
+                type: Sequelize.STRING,
+                allowNull: false,
+                unique: true,
+            },
+            user_email: {
                 type: Sequelize.STRING,
                 allowNull: false,
                 unique: true,
@@ -24,7 +24,7 @@ module.exports = {
                 allowNull: false,
                 defaultValue: false,
             },
-            password: {
+            user_password: {
                 type: Sequelize.STRING,
                 allowNull: false,
             },

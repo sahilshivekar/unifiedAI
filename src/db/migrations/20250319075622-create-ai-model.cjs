@@ -14,10 +14,10 @@ module.exports = {
                 allowNull: false,
             },
             logo_secure_url: {
-                type: Sequelize.STRING,
+                type: Sequelize.TEXT,
             },
             logo_public_id: {
-                type: Sequelize.STRING,
+                type: Sequelize.TEXT,
             },
             model_generation_type: {
                 type: Sequelize.ENUM('text', 'image'),

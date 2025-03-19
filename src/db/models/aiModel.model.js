@@ -1,6 +1,7 @@
 // aiModel.model.js
 import { Sequelize, Model } from 'sequelize';
 import sequelize from '../../config/db.connection.js';
+import PromptResponse from './promptResponse.model.js';
 
 class AiModel extends Model { }
 
@@ -24,10 +25,10 @@ AiModel.init(
             },
         },
         logo_secure_url: {
-            type: Sequelize.STRING,
+            type: Sequelize.TEXT,
         },
         logo_public_id: {
-            type: Sequelize.STRING,
+            type: Sequelize.TEXT,
         },
         model_generation_type: {
             type: Sequelize.ENUM('text', 'image'),

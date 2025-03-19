@@ -1,6 +1,7 @@
 import { Sequelize, Model } from 'sequelize';
 import sequelize from '../../config/db.connection.js';
 import User from './user.model.js';
+import PromptResponse from './promptResponse.model.js';
 
 class Chat extends Model { }
 
@@ -15,7 +16,7 @@ Chat.init(
             type: Sequelize.INTEGER,
             allowNull: false,
             references: {
-                model: User,
+                model: 'users',
                 key: 'user_id',
             },
             onUpdate: 'CASCADE',
@@ -35,4 +36,6 @@ Chat.init(
     }
 );
 
+Chat.hasMany(PromptResponse, { foreignKey: 'chat_id', sourceKey: 'chat_id' });
+PromptResponse.belongsTo(Chat, { foreignKey: 'chat_id', targetKey: 'chat_id' });
 export default Chat;

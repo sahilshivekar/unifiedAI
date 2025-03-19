@@ -14,6 +14,7 @@ export default {
                 require: true
             }
         },
+        logging: false,
     },
     test: {
         username: process.env.PG_TEST_DB_USER,

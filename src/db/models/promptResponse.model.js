@@ -16,7 +16,7 @@ PromptResponse.init(
             type: Sequelize.INTEGER,
             allowNull: false,
             references: {
-                model: Chat,
+                model: "chats",
                 key: 'chat_id',
             },
             onUpdate: 'CASCADE',
@@ -78,5 +78,9 @@ PromptResponse.init(
         timestamps: false,
     }
 );
+
+AiModel.hasMany(PromptResponse, { foreignKey: 'ai_model_id', sourceKey: 'ai_model_id' });
+PromptResponse.belongsTo(AiModel, { foreignKey: 'ai_model_id', targetKey: 'ai_model_id' });
+
 
 export default PromptResponse;
