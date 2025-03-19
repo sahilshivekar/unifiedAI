@@ -33,6 +33,12 @@ AiModel.init(
         model_generation_type: {
             type: Sequelize.ENUM('text', 'image'),
             allowNull: false,
+            validate: {
+                isIn:{
+                    args: [['text', 'image']],
+                    msg: 'Model generation type can only be text or image'
+                }
+            }
         },
     },
     {

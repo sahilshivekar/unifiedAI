@@ -15,6 +15,9 @@ app.use(express.static("public"))
 app.use(cookieParser())
 
 import userRoutes from "./routes/user.routes.js"
+import aiModelRoutes from "./routes/aiModel.routes.js"
+
 app.use("/api/v1/user", userRoutes)
+app.use("/api/v1/aiModel", aiModelRoutes)
 
 export { app }
