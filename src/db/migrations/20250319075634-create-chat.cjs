@@ -9,6 +9,10 @@ module.exports = {
                 primaryKey: true,
                 autoIncrement: true,
             },
+            chat_title: {
+                type: Sequelize.STRING,
+                allowNull: false
+            },
             user_id: {
                 type: Sequelize.INTEGER,
                 allowNull: false,

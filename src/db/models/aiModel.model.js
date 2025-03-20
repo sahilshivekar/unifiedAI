@@ -15,6 +15,9 @@ AiModel.init(
         name: {
             type: Sequelize.STRING,
             allowNull: false,
+            unique: {
+                msg: "This name is already taken"
+            },
             validate: {
                 notNull: {
                     msg: 'Name cannot be empty',

@@ -16,8 +16,10 @@ app.use(cookieParser())
 
 import userRoutes from "./routes/user.routes.js"
 import aiModelRoutes from "./routes/aiModel.routes.js"
+import chatRoutes from "./routes/chat.routes.js"
 
 app.use("/api/v1/user", userRoutes)
 app.use("/api/v1/aiModel", aiModelRoutes)
+app.use("/api/v1/chat", chatRoutes)
 
 export { app }

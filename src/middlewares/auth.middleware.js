@@ -8,7 +8,7 @@ import User from "../db/models/user.model.js"
 
 const verifyJWT = asyncHandler(async (req, _, next) => {
     try {
-        console.log(req.cookies)
+        // console.log(req.cookies)
         const token = req.cookies?.unifiedAiAccessToken || req.header("Authorization")?.replace("Bearer ", "");
 
         if (!token) {
@@ -16,7 +16,7 @@ const verifyJWT = asyncHandler(async (req, _, next) => {
         }
 
         const decodedToken = jwt.verify(token, process.env.JWT_ACCESS_TOKEN_SECRET)
-        console.log("decoded", decodedToken)
+        // console.log("decoded", decodedToken)
         const user = await User.findByPk(decodedToken?.id);
 
         if (!user) {

@@ -12,6 +12,18 @@ Chat.init(
             primaryKey: true,
             autoIncrement: true,
         },
+        chat_title: {
+            type: Sequelize.STRING,
+            allowNull: false,
+            validate: {
+                notNull: {
+                    msg: 'Chat title is required',
+                },
+                notEmpty: {
+                    msg: 'Chat title cannot be empty',
+                }
+            }
+        },
         user_id: {
             type: Sequelize.INTEGER,
             allowNull: false,

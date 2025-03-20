@@ -24,7 +24,7 @@ setInterval(() => {
 setInterval(async () => {
     const users = await sequelize.query(`SELECT user_id FROM users LIMIT 1;`)
     if (users) {
-        console.log("DB Self-ping: ")
+        console.log("DB Self-ping")
     }
 }, 1000 * 20) // 20 seconds
 
