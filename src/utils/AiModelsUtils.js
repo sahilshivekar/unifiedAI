@@ -1,6 +1,6 @@
 import dotenv from "dotenv"
 dotenv.config({ path: '.env' })
-
+import fetch from "node-fetch";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import PromptResponse from "../db/models/promptResponse.model.js";
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -18,17 +18,7 @@ const getTextResponseFromGemini = async (promptWithHistory, aiModelName) => {
 }
 
 const getChatHistoryWithRolePartFormat = async (chatId, isCombined, isBestPick, aiModel, limit) => {
-    // console.log(chatId, isCombined, isBestPick, aiModel)
-    // console.log({
-    //     where: {
-    //         [Op.and]: [
-    //             { chat_id: chatId },
-    //             ...(aiModel != null ? [{ ai_model_id: aiModel }] : []),
-    //             ...(isCombined == true ? [{ is_combined: false }] : []),
-    //             ...(isBestPick == true ? [{ is_best_pick: true }] : [])
-    //         ]
-    //     }
-    // }.toString())
+    
     const chatHistory = await PromptResponse.findAll({
         where: {
             [Op.and]: [
@@ -53,7 +43,6 @@ const getChatHistoryWithRolePartFormat = async (chatId, isCombined, isBestPick, 
             role: "model",
             parts: [{ text: chat.response_text }]
         })
-        console.log(history)
     })
 
     return history;
@@ -74,10 +63,26 @@ const generateChatName = async (conversation) => {
     return geminiResult.response.text().trim(); // Trim to remove extra whitespace.
 };
 
+
+const generateCombinedResponseSummary = async (combinedResponseParagraph) => {
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  
+    const prompt = `Please summarize the following combined response paragraph, retaining all key points in a concise and understandable manner.
+  
+    Combined Response Paragraph:
+    ${combinedResponseParagraph}
+  
+    Summary: `;
+  
+    const geminiResult = await model.generateContent(prompt);
+    return geminiResult.response.text().trim();
+  };
+
 export {
     getTextResponseFromGemini,
     getChatHistoryWithRolePartFormat,
     supportedTextModels,
     geminiApiTextModels,
-    generateChatName
+    generateChatName,
+    generateCombinedResponseSummary
 }

@@ -216,7 +216,6 @@ const sendVerificationCodeToEmail = asyncHandler(async (req, res) => {
                     [Op.and]: [{ email: email }, { verificationCode }],
                 },
             });
-            console.log(`Verification code for ${email} is deleted due to timeout`);
         },
         5 * 60 * 1000
     );
