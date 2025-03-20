@@ -17,32 +17,31 @@ const getTextResponseFromGemini = async (promptWithHistory, aiModelName) => {
     return geminiResult.response.text()
 }
 
-const getChatHistoryWithRolePartFormat = async (chatId, isCombined, isBestPick, aiModel) => {
+const getChatHistoryWithRolePartFormat = async (chatId, isCombined, isBestPick, aiModel, limit) => {
+    // console.log(chatId, isCombined, isBestPick, aiModel)
+    // console.log({
+    //     where: {
+    //         [Op.and]: [
+    //             { chat_id: chatId },
+    //             ...(aiModel != null ? [{ ai_model_id: aiModel }] : []),
+    //             ...(isCombined == true ? [{ is_combined: false }] : []),
+    //             ...(isBestPick == true ? [{ is_best_pick: true }] : [])
+    //         ]
+    //     }
+    // }.toString())
     const chatHistory = await PromptResponse.findAll({
         where: {
             [Op.and]: [
                 { chat_id: chatId },
-                ...[aiModel ? { ai_model_id: aiModel } : null],
-                ...[isCombined == true ? { is_combined: false } : null],
-                ...[isBestPick == true ? { is_best_pick: true } : null],
+                ...(aiModel ? [{ ai_model_id: aiModel }] : []),
+                ...(isCombined == true ? [{ is_combined: false }] : []),
+                ...(isBestPick == true ? [{ is_best_pick: true }] : []),
             ]
         },
         order: [['rank', 'DESC']],
-        limit: 7
+        ...(limit == "all" ? {} : { limit: 7 })
     })
-    console.log(
-        {
-            [Op.and]: [
-                { chat_id: chatId },
-                ...[isCombined == true ? { is_combined: true } : null],
-                ...[isBestPick == true ? { is_best_pick: true } : null],
-                ...[aiModel ? { ai_model_id: aiModel } : null],
-            ]
-        }
-    )
-    console.log(chatHistory)
     let history = []
-
 
     // adding chathistory in a way that the gemini api understands
     chatHistory.forEach(chat => {
@@ -54,14 +53,31 @@ const getChatHistoryWithRolePartFormat = async (chatId, isCombined, isBestPick, 
             role: "model",
             parts: [{ text: chat.response_text }]
         })
+        console.log(history)
     })
 
     return history;
 }
 
+const generateChatName = async (conversation) => {
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    // Construct a prompt that asks for a chat title based on the conversation.
+    const prompt = `Based on the following chat conversation, please generate a concise and descriptive title.
+  
+    Conversation:
+    ${JSON.stringify(conversation, null, 2)}
+  
+    Title: `;
+
+    const geminiResult = await model.generateContent(prompt);
+    return geminiResult.response.text().trim(); // Trim to remove extra whitespace.
+};
+
 export {
     getTextResponseFromGemini,
     getChatHistoryWithRolePartFormat,
     supportedTextModels,
-    geminiApiTextModels
+    geminiApiTextModels,
+    generateChatName
 }

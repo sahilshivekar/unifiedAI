@@ -17,7 +17,7 @@ setInterval(() => {
     }).on('error', (err) => {
         console.log("Error during self-ping: ", err.message)
     })
-}, 1000 * 60 * 2) //2 minutes
+}, 1000 * 60) //2 minutes
 
 
 //for stoping the database service from going down with inactivity

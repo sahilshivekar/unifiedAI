@@ -11,9 +11,11 @@ import {
     getTextResponseFromGemini,
     getChatHistoryWithRolePartFormat,
     supportedTextModels,
-    geminiApiTextModels
+    geminiApiTextModels,
+    generateChatName
 } from '../utils/AiModelsUtils.js';
 import { Op } from "sequelize";
+import AiModel from "../db/models/aiModel.model.js";
 
 const getPromptResponse = asyncHandler(async (req, res) => {
 
@@ -114,7 +116,13 @@ const getPromptResponse = asyncHandler(async (req, res) => {
         })
     })
 
-    // le combinedRespons
+
+    if(currentRank == 1){
+        const chatName = await generateChatName(conversation)
+        chat.chat_title = chatName
+        await chat.save()
+        
+    }
 
     for (let textResponse of textResponses) {
         await PromptResponse.create({
@@ -125,7 +133,7 @@ const getPromptResponse = asyncHandler(async (req, res) => {
             rank: currentRank
         })
     }
-    
+
     res
         .status(200)
         .json(
@@ -133,7 +141,7 @@ const getPromptResponse = asyncHandler(async (req, res) => {
                 200,
                 "Chat response generated successfully",
                 {
-                    chatId: chat.chat_id,
+                    chat: chat,
                     promptResponses: textResponses
                 }
             )
@@ -142,6 +150,122 @@ const getPromptResponse = asyncHandler(async (req, res) => {
 })
 
 
+const getChatHistory = asyncHandler(async (req, res) => {
+    const {
+        chatId,
+        aiModelId,
+        isCombined,
+        isBestPick
+    } = req.body;
+
+    if (!chatId) {
+        throw new ApiError(400, "Chat ID is required")
+    }
+
+    const chat = await Chat.findOne({ where: { chat_id: chatId } })
+
+    if (!chat) {
+        throw new ApiError(400, "Chat with given id not found")
+    }
+
+    const history = await getChatHistoryWithRolePartFormat(
+        chatId,
+        isCombined == true,
+        isBestPick == true,
+        aiModelId ? aiModelId : null,
+        "all"
+    )
+
+    res
+        .status(200)
+        .json(
+            new ApiResponse(
+                "Chat history retrieved successfully",
+                {
+                    chat: chat,
+                    history: history
+                }
+            )
+        )
+})
+
+const getAllChats = asyncHandler(async (req, res) => {
+
+    if (!req?.user?.user_id) {
+        throw new ApiError(401, "Unauthorized")
+    }
+
+    const chats = await Chat.findAll({
+        where: {
+            user_id:req?.user?.user_id
+        }
+    })
+
+    res
+        .status(200)
+        .json(
+            new ApiResponse(
+                "All chats retrieved successfully",
+                {
+                    chats: chats
+                }
+            )
+        )
+})
+
+
+const getUsedModelsInChat = asyncHandler(async (req, res) => {
+
+    const { chatId } = req.body
+
+    if (!chatId) {
+        throw new ApiError(400, "Chat ID is required")
+    }
+
+    const chat = await Chat.findByPk(chatId)
+
+    if (!chat) {
+        throw new ApiError(400, "Chat not found")
+    }
+
+    const usedModels = await PromptResponse.findAll({
+        where: {
+            chat_id: chat.chat_id,
+            is_combined: false,
+            is_best_pick: false,
+            rank: 1
+        }
+    })
+
+    let usedModelsWithIdandName = []
+
+    for (let usedModel of usedModels) {
+        console.log(usedModel)
+        const model = await AiModel.findByPk(usedModel.ai_model_id)
+        usedModelsWithIdandName.push({
+            id: model.ai_model_id,
+            name: model.name
+        })
+    }
+
+
+    res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                "Used models retrieved successfully",
+                {
+                    usedModels: usedModelsWithIdandName
+                }
+            )
+        )
+})
+
+
 export {
-    getPromptResponse
+    getPromptResponse,
+    getUsedModelsInChat,
+    getAllChats,
+    getChatHistory
 }
