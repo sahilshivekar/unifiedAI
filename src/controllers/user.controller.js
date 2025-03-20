@@ -21,7 +21,7 @@ const generateVerificationCode = (length = 6) => {
 const options = {
     // httpOnly: true,
     // secure: true,
-    // sameSite: "none"
+    sameSite: "none"
 };
 
 //* generate access and refresh tokens for users at the time of login
