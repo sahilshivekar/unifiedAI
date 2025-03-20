@@ -12,7 +12,8 @@ import {
     getChatHistoryWithRolePartFormat,
     supportedTextModels,
     geminiApiTextModels,
-    generateChatName
+    generateChatName,
+    generateCombinedResponseSummary
 } from '../utils/AiModelsUtils.js';
 import { Op } from "sequelize";
 import AiModel from "../db/models/aiModel.model.js";
@@ -76,28 +77,27 @@ const getPromptResponse = asyncHandler(async (req, res) => {
         })
     }
 
-    // console.log(conversation)
 
-    //!getting responses from the models
-    // for (const model of selectedTextModels) {
-    //     if (geminiApiTextModels.includes(model.name)) {
-    //         textResponses.push({
-    //             model: model,
-    //             responseText: await getTextResponseFromGemini(
-    //                 conversation,
-    //                 model.name
-    //             )
-    //         })
-    //     }
-    // }
-    const responsePromises = selectedTextModels
+    let responsePromises = selectedTextModels
         .filter(model => geminiApiTextModels.includes(model.name))
         .map(async model => ({
             model: model,
             responseText: await getTextResponseFromGemini(conversation, model.name),
         }));
 
+    // adding reponses from gemini only
     textResponses = await Promise.all(responsePromises);
+
+    let combinedIntialResponse;
+
+    for(let textResponse of textResponses){
+        combinedIntialResponse += textResponse.responseText
+    }
+
+    textResponses.push({
+        model: "combined",
+        responseText: await generateCombinedResponseSummary(combinedIntialResponse)
+    })
 
     const previousRank = await PromptResponse.findAll({
         where: {
@@ -117,11 +117,11 @@ const getPromptResponse = asyncHandler(async (req, res) => {
     })
 
 
-    if(currentRank == 1){
+    if (currentRank == 1) {
         const chatName = await generateChatName(conversation)
         chat.chat_title = chatName
         await chat.save()
-        
+
     }
 
     for (let textResponse of textResponses) {
@@ -129,8 +129,10 @@ const getPromptResponse = asyncHandler(async (req, res) => {
             chat_id: chat.chat_id,
             prompt_text: promptText ? promptText : null,
             response_text: textResponse.responseText ? textResponse.responseText : null,
-            ai_model_id: textResponse.model.id,
-            rank: currentRank
+            ai_model_id: textResponse.model == "combined" ? null : textResponse.model.id,
+            rank: currentRank,
+            is_combined: textResponse.model == "combined" ? true : false,
+            is_best_pick: textResponse.model == "bestPick" ? true : false //currently not in use
         })
     }
 
@@ -180,6 +182,7 @@ const getChatHistory = asyncHandler(async (req, res) => {
         .status(200)
         .json(
             new ApiResponse(
+                200,
                 "Chat history retrieved successfully",
                 {
                     chat: chat,
@@ -197,7 +200,7 @@ const getAllChats = asyncHandler(async (req, res) => {
 
     const chats = await Chat.findAll({
         where: {
-            user_id:req?.user?.user_id
+            user_id: req?.user?.user_id
         }
     })
 
@@ -205,6 +208,7 @@ const getAllChats = asyncHandler(async (req, res) => {
         .status(200)
         .json(
             new ApiResponse(
+                200,
                 "All chats retrieved successfully",
                 {
                     chats: chats
@@ -240,7 +244,6 @@ const getUsedModelsInChat = asyncHandler(async (req, res) => {
     let usedModelsWithIdandName = []
 
     for (let usedModel of usedModels) {
-        console.log(usedModel)
         const model = await AiModel.findByPk(usedModel.ai_model_id)
         usedModelsWithIdandName.push({
             id: model.ai_model_id,
