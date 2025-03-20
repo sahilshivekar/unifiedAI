@@ -19,8 +19,9 @@ const generateVerificationCode = (length = 6) => {
 
 //* options for setting cookies
 const options = {
-    httpOnly: true,
-    secure: true,
+    // httpOnly: true,
+    // secure: true,
+    // sameSite: "none"
 };
 
 //* generate access and refresh tokens for users at the time of login
