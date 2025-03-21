@@ -4,7 +4,9 @@ dotenv.config({ path: '.env' })
 import https from 'https';
 import sequelize from "./config/db.connection.js";
 const port = process.env.PORT || 8000;
-
+import {
+    getTextResponseFromCohere
+} from "./utils/AiModelsUtils.js";
 
 // for stoping the server instance on render to go down with inactivity
 app.get("/api/v1/self-ping", async (req, res) => {
@@ -27,6 +29,8 @@ setInterval(async () => {
         console.log("DB Self-ping")
     }
 }, 1000 * 20) // 20 seconds
+
+
 
 app.listen(port, () => {
     console.log(`Server is running at port: ${port}`);

@@ -5,11 +5,11 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import PromptResponse from "../db/models/promptResponse.model.js";
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 import { Op } from "sequelize";
+import { CohereClientV2 } from "cohere-ai";
 
 
-const supportedTextModels = ["gemini-1.5-flash", "gemini-2.0-flash"]
+const supportedTextModels = ["gemini-1.5-flash", "gemini-2.0-flash", "cohere-command-a-03-2025"]
 const geminiApiTextModels = ["gemini-2.0-flash", "gemini-1.5-flash"]
-
 
 const getTextResponseFromGemini = async (promptWithHistory, aiModelName) => {
     const model = genAI.getGenerativeModel({ model: aiModelName });
@@ -18,13 +18,13 @@ const getTextResponseFromGemini = async (promptWithHistory, aiModelName) => {
 }
 
 const getChatHistoryWithRolePartFormat = async (chatId, isCombined, isBestPick, aiModel, limit) => {
-    
+
     const chatHistory = await PromptResponse.findAll({
         where: {
             [Op.and]: [
                 { chat_id: chatId },
                 ...(aiModel ? [{ ai_model_id: aiModel }] : []),
-                ...(isCombined == true ? [{ is_combined: false }] : []),
+                ...(isCombined == true ? [{ is_combined: true }] : []),
                 ...(isBestPick == true ? [{ is_best_pick: true }] : []),
             ]
         },
@@ -66,17 +66,49 @@ const generateChatName = async (conversation) => {
 
 const generateCombinedResponseSummary = async (combinedResponseParagraph) => {
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-  
+
     const prompt = `Please summarize the following combined response paragraph, retaining all key points in a concise and understandable manner.
   
     Combined Response Paragraph:
     ${combinedResponseParagraph}
   
     Summary: `;
-  
+
     const geminiResult = await model.generateContent(prompt);
     return geminiResult.response.text().trim();
-  };
+};
+
+const getTextResponseFromCohere = async (messages, aiModelName) => {
+
+        try {
+            const cohere = new CohereClientV2({
+                token: process.env.COHERE_API_TRIAL_KEY,
+              });
+      
+          const response = await cohere.chat({
+            model: "command-a-03-2025",
+            messages: messages,
+          });
+          if (
+            response &&
+            response?.message &&
+            response?.message?.content &&
+            response?.message?.content?.length > 0 &&
+            response?.message?.content[0]?.text
+          ) {
+            const responseText = response.message.content[0].text;
+            // console.log('Response Text:', responseText);
+            return responseText
+          } else {
+            return null
+            console.log('Response text not found.');
+          }
+        } catch (error) {
+          console.error('Error in Cohere API call:', error);
+          throw error; // Rethrow the error to be handled by the caller
+        }
+      
+}
 
 export {
     getTextResponseFromGemini,
@@ -84,5 +116,11 @@ export {
     supportedTextModels,
     geminiApiTextModels,
     generateChatName,
-    generateCombinedResponseSummary
+    generateCombinedResponseSummary,
+    getTextResponseFromCohere
 }
+
+
+
+//assembly ai
+//hidden ai

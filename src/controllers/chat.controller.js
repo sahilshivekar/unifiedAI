@@ -13,10 +13,12 @@ import {
     supportedTextModels,
     geminiApiTextModels,
     generateChatName,
-    generateCombinedResponseSummary
+    generateCombinedResponseSummary,
+    getTextResponseFromCohere
 } from '../utils/AiModelsUtils.js';
 import { Op } from "sequelize";
 import AiModel from "../db/models/aiModel.model.js";
+import { text } from "stream/consumers";
 
 const getPromptResponse = asyncHandler(async (req, res) => {
 
@@ -85,12 +87,31 @@ const getPromptResponse = asyncHandler(async (req, res) => {
             responseText: await getTextResponseFromGemini(conversation, model.name),
         }));
 
+    let textResponseCohere = null
+    if (selectedTextModels.some(model => model.name == "cohere-command-a-03-2025")) {
+        const convertedFormatOfConversation = conversation.map(part => {
+            return {
+                role: part.role,
+                content: part.parts[0].text
+            }
+        })
+        textResponseCohere = await getTextResponseFromCohere(convertedFormatOfConversation)
+        console.log(textResponseCohere.toString())
+    }
+
     // adding reponses from gemini only
     textResponses = await Promise.all(responsePromises);
 
     let combinedIntialResponse;
+    if (textResponseCohere != null) {
+        combinedIntialResponse += textResponseCohere
+        textResponses.push({
+            model: {id: 3, name:"cohere-command-a-03-2025"},
+            responseText: textResponseCohere
+        })
+    }
 
-    for(let textResponse of textResponses){
+    for (let textResponse of textResponses) {
         combinedIntialResponse += textResponse.responseText
     }
 
@@ -98,6 +119,8 @@ const getPromptResponse = asyncHandler(async (req, res) => {
         model: "combined",
         responseText: await generateCombinedResponseSummary(combinedIntialResponse)
     })
+
+
 
     const previousRank = await PromptResponse.findAll({
         where: {
@@ -264,6 +287,9 @@ const getUsedModelsInChat = asyncHandler(async (req, res) => {
             )
         )
 })
+
+
+
 
 
 export {
