@@ -22,7 +22,7 @@ import { text } from "stream/consumers";
 
 const getPromptResponse = asyncHandler(async (req, res) => {
 
-    const {
+    let {
         chatId, // will be null if the chat is null
         promptText,
         selectedTextModels, // array of selected ai models ids
@@ -33,9 +33,37 @@ const getPromptResponse = asyncHandler(async (req, res) => {
         throw new ApiError(400, "User Id not found")
     }
 
+    if(chatId){
+        const chat = await Chat.findByPk(chatId)
+
+        const usedModels = await PromptResponse.findAll({
+            where: {
+                chat_id: chat.chat_id,
+                is_combined: false,
+                is_best_pick: false,
+                rank: 1
+            }
+        })
+    
+        let usedModelsWithIdandName = []
+    
+        for (let usedModel of usedModels) {
+            const model = await AiModel.findByPk(usedModel.ai_model_id)
+            usedModelsWithIdandName.push({
+                id: model.ai_model_id,
+                name: model.name
+            })
+        }
+
+        selectedTextModels = usedModelsWithIdandName
+        console.log(selectedTextModels)
+    }
+
     if (!selectedTextModels) {
         throw new ApiError(400, "Selected ai models not found")
     }
+
+
 
     // check if all models are supported
     if (!selectedTextModels.every(model => supportedTextModels.includes(model.name))) {
@@ -91,12 +119,12 @@ const getPromptResponse = asyncHandler(async (req, res) => {
     if (selectedTextModels.some(model => model.name == "cohere-command-a-03-2025")) {
         const convertedFormatOfConversation = conversation.map(part => {
             return {
-                role: part.role,
+                role: part.role == "model" ? "assistant" : part.role,
                 content: part.parts[0].text
             }
         })
         textResponseCohere = await getTextResponseFromCohere(convertedFormatOfConversation)
-        console.log(textResponseCohere.toString())
+        // console.log(textResponseCohere.toString())
     }
 
     // adding reponses from gemini only
