@@ -6,6 +6,7 @@ import PromptResponse from "../db/models/promptResponse.model.js";
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 import { Op } from "sequelize";
 import { CohereClientV2 } from "cohere-ai";
+import { error } from "console";
 
 
 const supportedTextModels = ["gemini-1.5-flash", "gemini-2.0-flash", "cohere-command-a-03-2025"]
@@ -78,36 +79,37 @@ const generateCombinedResponseSummary = async (combinedResponseParagraph) => {
     return geminiResult.response.text().trim();
 };
 
-const getTextResponseFromCohere = async (messages, aiModelName) => {
+const getTextResponseFromCohere = async (messages, aiModelName, errorWithFirstTry = false) => {
 
-        try {
-            const cohere = new CohereClientV2({
-                token: process.env.COHERE_API_TRIAL_KEY,
-              });
-      
-          const response = await cohere.chat({
+    try {
+        const cohere = new CohereClientV2({
+            token: errorWithFirstTry == true ? process.env.COHERE_API_TRIAL_KEY2 : process.env.COHERE_API_TRIAL_KEY,
+        });
+
+        const response = await cohere.chat({
             model: "command-a-03-2025",
             messages: messages,
-          });
-          if (
+        });
+        if (
             response &&
             response?.message &&
             response?.message?.content &&
             response?.message?.content?.length > 0 &&
             response?.message?.content[0]?.text
-          ) {
+        ) {
             const responseText = response.message.content[0].text;
             // console.log('Response Text:', responseText);
             return responseText
-          } else {
+        } else {
             return null
             console.log('Response text not found.');
-          }
-        } catch (error) {
-          console.error('Error in Cohere API call:', error);
-          throw error; // Rethrow the error to be handled by the caller
         }
-      
+    } catch (error) {
+        getTextResponseFromCohere(messages, aiModelName, true)
+        console.error('Error in Cohere API call:', error);
+        throw error; // Rethrow the error to be handled by the caller
+    }
+
 }
 
 export {

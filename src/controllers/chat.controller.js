@@ -33,7 +33,7 @@ const getPromptResponse = asyncHandler(async (req, res) => {
         throw new ApiError(400, "User Id not found")
     }
 
-    if(chatId){
+    if (chatId) {
         const chat = await Chat.findByPk(chatId)
 
         const usedModels = await PromptResponse.findAll({
@@ -44,9 +44,9 @@ const getPromptResponse = asyncHandler(async (req, res) => {
                 rank: 1
             }
         })
-    
+
         let usedModelsWithIdandName = []
-    
+
         for (let usedModel of usedModels) {
             const model = await AiModel.findByPk(usedModel.ai_model_id)
             usedModelsWithIdandName.push({
@@ -58,6 +58,7 @@ const getPromptResponse = asyncHandler(async (req, res) => {
         selectedTextModels = usedModelsWithIdandName
         console.log(selectedTextModels)
     }
+
 
     if (!selectedTextModels) {
         throw new ApiError(400, "Selected ai models not found")
@@ -130,11 +131,12 @@ const getPromptResponse = asyncHandler(async (req, res) => {
     // adding reponses from gemini only
     textResponses = await Promise.all(responsePromises);
 
+
     let combinedIntialResponse;
     if (textResponseCohere != null) {
         combinedIntialResponse += textResponseCohere
         textResponses.push({
-            model: {id: 3, name:"cohere-command-a-03-2025"},
+            model: { id: 3, name: "cohere-command-a-03-2025" },
             responseText: textResponseCohere
         })
     }
@@ -176,6 +178,7 @@ const getPromptResponse = asyncHandler(async (req, res) => {
     }
 
     for (let textResponse of textResponses) {
+        // if (textResponse.model != "combined") {
         await PromptResponse.create({
             chat_id: chat.chat_id,
             prompt_text: promptText ? promptText : null,
@@ -185,6 +188,7 @@ const getPromptResponse = asyncHandler(async (req, res) => {
             is_combined: textResponse.model == "combined" ? true : false,
             is_best_pick: textResponse.model == "bestPick" ? true : false //currently not in use
         })
+        // }
     }
 
     res
